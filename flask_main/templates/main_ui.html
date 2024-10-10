@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Title</title>
+
+
+    <link rel="stylesheet" href="/static/css/default.min.css">
+    <script src="/static/js/highlight.js"></script>
+
+</head>
+<body>
+    <div class="title">
+        <span style="font-size: 25px;"> 软件测试，前端可视化框架，后续待补充</span>
+    </div>
+    <div id="input-container">
+        <div id="chat-message">
+
+        </div>
+    </div>
+    <div class="message-input-wrapper">
+        <textarea type="text" id="message-input" placeholder="请输入您的内容"></textarea>
+        <div id="send-button">发送</div>
+    </div>
+
+
+
+    <script>
+        console.log(window)
+
+        const chatMessages=document.getElementById("chat-message")  //文本输出显示框
+        const messageInput=document.getElementById("message-input") //文本输入显示框
+        const sendButton=document.getElementById("send-button")     //发送button
+
+        //时间获取函数
+        function getNowTime(){
+            var currentTime = new Date();
+            var year = currentTime.getFullYear();
+            var month = currentTime.getMonth()+1;
+            var day = currentTime.getDate();
+            var hours = currentTime.getHours();
+            var minutes = currentTime.getMinutes();
+            var seconds =currentTime.getSeconds();
+
+            //
+            if (month<10){
+                month='0'+month;
+            }
+            if (day<10){
+                day='0'+day;
+            }
+            if (hours<10){
+                hours='0'+hours;
+            }
+            if (minutes<10){
+                minutes='0'+minutes;
+            }
+            if (seconds <10){
+                seconds='0'+seconds;
+            }
+
+            var formattedTime = year+'-'+month+'-'+day+' '+hours+':'+minutes+':'+seconds;
+            return formattedTime;
+        }
+
+
+        //发送输入信息，读取输入文本，获取时间信息，并传递信息sendToserver
+        function sendMessage(){
+            const message=messageInput.value;
+            if (message.trim()===""){
+                return;
+            }
+
+            let messageElement = `<div class="flex-right">
+                <div class="time-remark-wrapper mr10">
+                    <span class="time">${getNowTime()}</span>
+                    <div class="message user-message" style="display: inline-block;">
+                        ${message}
+                    </div>
+                </div>
+                <img src="{{url_for('static',filename='mtr.gif')}}" class="avatar" style="width: 100px; height: 100px;"/>
+            </div>`
+
+            chatMessages.innerHTML += messageElement;
+
+            messageInput.value= "";
+
+            sendToserver(message);
+        }
+
+
+        //发送信息到服务器，这里链接到numeric路由，并对响应进行处理
+        function sendToserver(message){
+
+            const xhr = new XMLHttpRequest();
+
+            xhr.open("POST","/template_app",true);
+            xhr.setRequestHeader("Content-Type","application/json");
+            xhr.onreadystatechange = function (){
+                if (xhr.readyState=== XMLHttpRequest.DONE && xhr.status ===200){
+                    try{
+                        const response =JSON.parse(xhr.responseText);
+
+                        formateMessage(response);
+
+                    } catch (error){
+                        console.error("Error parsing JSON response:", error);
+                    }
+                }
+            };
+            xhr.send(JSON.stringify({message}));
+        }
+
+        //对响应消息进行可视化设置
+        function formateMessage(message){
+
+             var parsedHTML = JSON.stringify(message);
+
+            let messageHTML = `<div class="flex-left">
+                <img src="{{url_for('static',filename='mtr_alter.gif')}}" class="avatar mr10" style="width: 100px; height: 100px;"/>
+                <div class="time-remark-wrapper">
+                    <span class="time">${getNowTime()}</span>
+                    <div class="message bot-message" style="display: inline-block;">
+                        ${parsedHTML}
+                    </div>
+                </div>
+            </div>`
+
+            chatMessages.innerHTML += messageHTML;
+
+        }
+
+
+        //发送消息监听
+        sendButton.addEventListener("click",sendMessage);
+
+    </script>
+
+
+    <style>
+        body {
+            font-size: 16px;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-remark-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mr10 {
+            margin-right: 10px;
+        }
+
+        .time {
+            color: rgba(180, 187, 196);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .title {
+            display: flex;
+            justify-content: center;
+            text-align: center;
+            font-size: 16px;
+            padding: 15px;
+
+        }
+
+        #chat-messages {
+            padding: 30px;
+        }
+
+        #chat-container {
+            width: 1000px;
+            margin: 0 auto;
+            border-width: 1px;
+            border-style: solid;
+            border-color: #e5e7eb;
+            border-radius: 8px;
+            height: calc(100% - 150px);
+            box-sizing: content-box;
+            position: relative;
+            overflow: auto;
+        }
+
+        .message-input-wrapper {
+            position: fixed;
+            bottom: 20px;
+            display: flex;
+            align-items: center;
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 1000px;
+            /* background-color: #fff; */
+        }
+
+        .flex-right .time-remark-wrapper {
+            align-items: flex-end;
+        }
+
+        .message {
+            padding: 8px;
+            border-radius: 8px;
+
+        }
+
+        textarea:focus {
+            outline: none;
+        }
+
+        #message-input {
+            border: 1px solid #e5e7eb;
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+            padding: 10px;
+            flex: 1;
+
+        }
+
+        #message-input>textarea {
+            flex: 1;
+        }
+
+        .user-message {
+            background-color: rgb(210, 249, 209);
+            text-align: right;
+            margin-bottom: 20px;
+            padding: 10px 15px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .flex-right {
+            display: flex;
+            justify-content: flex-end;
+            margin-left: 600px;
+        }
+
+        .flex-left {
+            display: flex;
+            justify-content: flex-start;
+            margin-right: 600px;
+        }
+
+        #send-button {
+            background: #0c7a43;
+            color: #fff;
+            padding: 16px 15px;
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+            cursor: pointer;
+
+        }
+
+        .bot-message {
+            background-color: rgb(244, 246, 248);
+            margin-bottom: 20px;
+            padding: 10px 15px;
+        }
+
+        .hljs {
+            background: #fff;
+            border-radius: 8px;
+        }
+    </style>
+</body>
+</html>
